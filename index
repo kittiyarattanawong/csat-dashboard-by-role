@@ -329,9 +329,9 @@ async function fetchSheet(year){
       const getVal=(i)=>(row.c[i]&&row.c[i].v!==undefined)?row.c[i].v:null;
       const orderRaw=getVal(0);if(orderRaw===null||isNaN(Number(orderRaw)))return;
       const order=Number(orderRaw);
-      const name=String(getVal(1)||'').trim();if(!name)return;
+      const name=String(getVal(3)||'').trim();if(!name)return;
       const uid=`${order}_${rowIndex}`;
-      const source=String(getVal(2)||'').trim();
+      const source=String(getVal(4)||'').trim();
       const role=String(getVal(ROLE_COL)||'').trim(); // G col
       const total=parsePercent(getVal(TOTAL_COL)); // J col
       const scores={};SERVICE_MONTH_COLS.forEach((colIdx,i)=>{scores[i+1]=parsePercent(getVal(colIdx));});
