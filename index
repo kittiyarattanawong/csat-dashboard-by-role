@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Customer Satisfaction Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0d1117;--surface:#161b22;--surface2:#1c2330;--border:#2a3441;
+    --green:#2ea84f;--green-soft:#1a3d28;--green-text:#56d97b;
+    --yellow:#d4a017;--yellow-soft:#3d3010;--yellow-text:#f0c040;
+    --red:#c0392b;--red-soft:#3d1510;--red-text:#e85c4a;
+    --blue:#1f6feb;--blue-soft:#0d2545;
+    --text:#e6edf3;--text-muted:#7d8590;--text-dim:#4a5568;--accent:#58a6ff;
+    --shadow:rgba(0,0,0,0.4);--theme-btn-bg:#1c2330;--theme-btn-border:#2a3441;
+  }
+  [data-theme="light"] {
+    --bg:#f6f8fa;--surface:#ffffff;--surface2:#f0f2f5;--border:#d0d7de;
+    --green:#1a7f37;--green-soft:#dafbe1;--green-text:#1a7f37;
+    --yellow:#9a6700;--yellow-soft:#fff8c5;--yellow-text:#9a6700;
+    --red:#cf222e;--red-soft:#ffebe9;--red-text:#cf222e;
+    --blue:#0969da;--blue-soft:#ddf4ff;
+    --text:#1f2328;--text-muted:#656d76;--text-dim:#9198a1;--accent:#0969da;
+    --shadow:rgba(0,0,0,0.12);--theme-btn-bg:#f0f2f5;--theme-btn-border:#d0d7de;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);font-family:'IBM Plex Sans Thai',sans-serif;color:var(--text);min-height:100vh;padding:16px;transition:background .3s,color .3s}
+  .tsp{animation:tspk 2s ease-in-out infinite;transform-origin:center}
+  .tsp:nth-child(even){animation-delay:1s}
+  @keyframes tspk{0%,100%{opacity:.1;transform:scale(.6)}50%{opacity:1;transform:scale(1.4)}}
+  @media(prefers-reduced-motion:reduce){.tsp{animation:none;opacity:.7}}
+  .theme-toggle{background:var(--theme-btn-bg);border:1.5px solid var(--theme-btn-border);border-radius:20px;padding:6px 14px;cursor:pointer;font-size:13px;font-family:inherit;color:var(--text-muted);display:flex;align-items:center;gap:6px;transition:all .2s;user-select:none}
+  .theme-toggle:hover{border-color:var(--accent);color:var(--accent)}
+  .theme-icon{font-size:15px}
+  .dashboard-header{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;transition:background .3s,border-color .3s}
+  [data-theme="dark"] .dashboard-header{background:linear-gradient(135deg,#161b22 0%,#1a2332 100%)}
+  .dashboard-title{font-size:18px;font-weight:700;color:var(--text);letter-spacing:-.3px}
+  .header-right{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .legend-row{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+  .legend-item{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500}
+  .legend-dot{width:10px;height:10px;border-radius:50%}
+  .dot-green{background:var(--green-text);box-shadow:0 0 6px var(--green-text)}
+  .dot-yellow{background:var(--yellow-text);box-shadow:0 0 6px var(--yellow-text)}
+  .dot-red{background:var(--red-text);box-shadow:0 0 6px var(--red-text)}
+  .text-green{color:var(--green-text)}.text-yellow{color:var(--yellow-text)}.text-red{color:var(--red-text)}
+  .filter-bar{display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+  .filter-select{background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:7px 12px;font-size:13px;font-family:inherit;cursor:pointer;outline:none;transition:border-color .2s,background .3s}
+  .filter-select:hover,.filter-select:focus{border-color:var(--accent)}
+  .kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:12px}
+  .kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 12px;text-align:center;position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s,outline .15s,background .3s,border-color .3s}
+  .kpi-card.clickable{cursor:pointer}
+  .kpi-card.clickable:hover{transform:translateY(-2px);box-shadow:0 4px 20px var(--shadow)}
+  .kpi-card.kpi-active{outline:2px solid var(--accent);outline-offset:2px;transform:translateY(-2px)}
+  .kpi-card.kpi-active.green{outline-color:var(--green-text)}.kpi-card.kpi-active.yellow{outline-color:var(--yellow-text)}.kpi-card.kpi-active.red{outline-color:var(--red-text)}
+  .kpi-card.green{border-color:var(--green);background:linear-gradient(180deg,var(--green-soft) 0%,var(--surface) 100%)}
+  .kpi-card.yellow{border-color:var(--yellow);background:linear-gradient(180deg,var(--yellow-soft) 0%,var(--surface) 100%)}
+  .kpi-card.red{border-color:var(--red);background:linear-gradient(180deg,var(--red-soft) 0%,var(--surface) 100%)}
+  .kpi-label{font-size:11px;color:var(--text-muted);margin-bottom:8px;font-weight:500;line-height:1.3}
+  .kpi-value{font-size:28px;font-weight:700;font-family:'IBM Plex Mono',monospace;line-height:1;margin-bottom:4px}
+  .kpi-sub{font-size:11px;color:var(--text-muted)}.kpi-hint{font-size:10px;color:var(--text-dim);margin-top:4px}
+  .control-bar{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:12px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;transition:background .3s,border-color .3s}
+  .search-box{position:relative;flex:0 0 220px}
+  .search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:13px}
+  .search-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:7px;color:var(--text);padding:7px 10px 7px 30px;font-size:13px;font-family:inherit;outline:none;transition:border-color .2s,background .3s}
+  .search-input:focus{border-color:var(--accent)}.search-input::placeholder{color:var(--text-dim)}
+  .type-label{font-size:12px;color:var(--text-muted);white-space:nowrap}
+  .tag-group{display:flex;gap:6px;flex-wrap:wrap}
+  .tag{padding:5px 12px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:1.5px solid var(--border);background:var(--surface2);color:var(--text-muted);transition:all .2s;user-select:none}
+  .tag:hover{border-color:var(--accent);color:var(--accent)}.tag.active{background:var(--blue-soft);border-color:var(--accent);color:var(--accent)}
+  .filter-banner{display:none;align-items:center;justify-content:space-between;background:var(--blue-soft);border:1px solid var(--blue);border-radius:8px;padding:8px 14px;margin-bottom:12px;font-size:13px}
+  .filter-banner.show{display:flex}.filter-banner-text{color:var(--accent);font-weight:500}
+  .filter-banner-close{background:none;border:none;color:var(--accent);font-size:18px;cursor:pointer;padding:0 4px;line-height:1;opacity:.7;transition:opacity .2s}
+  .filter-banner-close:hover{opacity:1}
+  .main-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;align-items:stretch}
+  .panel{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;display:flex;flex-direction:column;transition:background .3s,border-color .3s}
+  .panel-title{font-size:13px;font-weight:600;color:var(--text-muted);margin-bottom:14px;text-transform:uppercase;letter-spacing:.5px;flex-shrink:0;transition:color .2s}
+  .panel-title.highlight{color:var(--accent)}
+  .chart-area{position:relative;flex:1;min-height:260px}
+  canvas#trendChart{width:100%!important;height:100%!important}
+  .top5-list{display:flex;flex-direction:column;gap:8px;flex:1;justify-content:space-between}
+  .top5-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface2);border-radius:8px;border:1px solid var(--border);transition:border-color .2s,background .3s;flex:1}
+  .top5-item:hover{border-color:var(--green)}
+  .top5-badge{width:50px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+  .top5-info{flex:1;min-width:0}
+  .top5-name{font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .top5-company{font-size:11px;color:var(--text-muted)}
+  .top5-score{font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:600;color:var(--green-text);flex-shrink:0}
+  .top5-bar{position:relative;height:4px;background:var(--border);border-radius:2px;margin-top:5px}
+  .top5-bar-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--green),var(--green-text));transition:width .8s ease}
+  .table-panel{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:background .3s,border-color .3s}
+  .table-header-bar{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+  .table-wrapper{overflow-x:auto;overflow-y:auto}
+  .page-size-select{background:var(--surface2);border:1px solid var(--border);border-radius:7px;color:var(--text);padding:5px 10px;font-size:12px;font-family:inherit;cursor:pointer;outline:none;transition:border-color .2s,background .3s}
+  .page-size-select:hover,.page-size-select:focus{border-color:var(--accent)}
+  .table-wrapper::-webkit-scrollbar{width:6px;height:6px}.table-wrapper::-webkit-scrollbar-track{background:var(--surface)}.table-wrapper::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+  table{width:100%;border-collapse:separate;border-spacing:0;font-size:12px}
+  thead th{background:var(--surface2);padding:10px 12px;text-align:left;font-weight:600;color:var(--text-muted);font-size:11px;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap;position:sticky;top:0;z-index:1;border-bottom:1px solid var(--border);transition:background .3s}
+  thead th:nth-child(1){position:sticky;left:0;top:0;z-index:4;min-width:36px}
+  thead th:nth-child(2){position:sticky;left:36px;top:0;z-index:4;min-width:200px;border-right:1px solid var(--border)}
+  tbody tr{border-bottom:1px solid var(--border);transition:background .15s;cursor:pointer}
+  tbody tr:hover{background:var(--surface2)}
+  tbody tr.row-selected{background:var(--blue-soft)!important;outline:1px solid var(--blue)}
+  tbody td{padding:10px 12px;color:var(--text);white-space:nowrap;border-bottom:1px solid var(--border)}
+  tbody td:nth-child(1){position:sticky;left:0;z-index:2;background:var(--surface)}
+  tbody td:nth-child(2){position:sticky;left:36px;z-index:2;background:var(--surface);border-right:1px solid var(--border)}
+  tbody tr:hover td:nth-child(1),tbody tr:hover td:nth-child(2){background:var(--surface2)}
+  tbody tr.row-selected td:nth-child(1),tbody tr.row-selected td:nth-child(2){background:var(--blue-soft)}
+  .score-cell{font-family:'IBM Plex Mono',monospace;font-weight:600;padding:3px 8px;border-radius:5px;font-size:12px;display:inline-block}
+  .score-green{background:var(--green-soft);color:var(--green-text);border:1px solid var(--green)}
+  .score-yellow{background:var(--yellow-soft);color:var(--yellow-text);border:1px solid var(--yellow)}
+  .score-red{background:var(--red-soft);color:var(--red-text);border:1px solid var(--red)}
+  .score-neutral{background:var(--surface2);color:var(--text-muted)}
+  .source-badge{font-size:10px;padding:2px 7px;border-radius:10px;background:var(--surface2);color:var(--text-muted);border:1px solid var(--border)}
+  .source-badge.csat{background:var(--blue-soft);color:var(--accent);border-color:var(--blue)}
+  .source-badge.dev{background:var(--green-soft);color:var(--green-text);border-color:var(--green)}
+  .source-badge.gform{background:#2a1a3d;color:#b98fff;border-color:#7c4dff}
+  [data-theme="light"] .source-badge.gform{background:#f3eeff;color:#6639ba;border-color:#8250df}
+  .footer-note{text-align:center;font-size:11px;color:var(--text-dim);margin-top:12px;padding:8px}
+  @media(max-width:768px){.kpi-row{grid-template-columns:repeat(2,1fr)}.main-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="dashboard-header">
+  <div class="dashboard-title">📊 Customer Satisfaction Dashboard <span style="font-size:13px;color:var(--text-muted);font-weight:400">(By Role)</span></div>
+  <div class="header-right">
+    <div class="legend-row">
+      <div class="legend-item"><span class="legend-dot dot-green"></span><span class="text-green">≥ 90.00%</span></div>
+      <div class="legend-item"><span class="legend-dot dot-yellow"></span><span class="text-yellow">80.00–89.99%</span></div>
+      <div class="legend-item"><span class="legend-dot dot-red"></span><span class="text-red">≤ 79.99%</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="filter-bar">
+  <label style="font-size:12px;color:var(--text-muted)">ปี :</label>
+  <select class="filter-select" id="filterYear" onchange="applyFilters()">
+    <option value="2025">2025</option>
+    <option value="2026">2026</option>
+  </select>
+  <label style="font-size:12px;color:var(--text-muted)">เดือน :</label>
+  <select class="filter-select" id="filterMonth" onchange="applyFilters()">
+    <option value="all">ทั้งหมด</option>
+    <option value="1">มกราคม</option><option value="2">กุมภาพันธ์</option><option value="3">มีนาคม</option>
+    <option value="4">เมษายน</option><option value="5">พฤษภาคม</option><option value="6">มิถุนายน</option>
+    <option value="7">กรกฎาคม</option><option value="8">สิงหาคม</option><option value="9">กันยายน</option>
+    <option value="10">ตุลาคม</option><option value="11">พฤศจิกายน</option><option value="12">ธันวาคม</option>
+  </select>
+  <div style="margin-left:auto">
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()">
+      <span class="theme-icon" id="themeIcon">☀️</span>
+      <span id="themeLabel">Light Mode</span>
+    </button>
+  </div>
+</div>
+
+<div class="kpi-row" id="kpiRow"></div>
+
+<div class="filter-banner" id="filterBanner">
+  <span class="filter-banner-text" id="filterBannerText"></span>
+  <button class="filter-banner-close" onclick="clearAllActiveFilters()">✕ ล้าง filter</button>
+</div>
+
+<div class="control-bar">
+  <div class="search-box">
+    <span class="search-icon">🔍</span>
+    <input class="search-input" id="searchInput" type="text" placeholder="ค้นหา Service..." oninput="applyFilters()">
+  </div>
+  <span class="type-label">Source Data :</span>
+  <div class="tag-group" id="tagGroup">
+    <span class="tag active" data-type="all" onclick="selectTag(this)">All</span>
+    <span class="tag" data-type="CSAT Survey" onclick="selectTag(this)">CSAT Survey</span>
+    <span class="tag" data-type="พัฒนาระบบประเมินเอง" onclick="selectTag(this)">พัฒนาระบบประเมินเอง</span>
+    <span class="tag" data-type="google form" onclick="selectTag(this)">Google Form</span>
+  </div>
+</div>
+
+<div class="main-grid">
+  <div class="panel">
+    <div class="panel-title" id="chartTitle">📈 คะแนน TOTAL รายเดือน</div>
+    <div class="chart-area"><canvas id="trendChart"></canvas></div>
+  </div>
+  <div class="panel">
+    <div class="panel-title">🏆 Top 5 Services</div>
+    <div class="top5-list" id="top5List"></div>
+  </div>
+</div>
+
+<div class="table-panel">
+  <div class="table-header-bar">
+    <span style="font-size:13px;font-weight:600;color:var(--text-muted)" id="tableTitle">📋 รายการ Service ทั้งหมด</span>
+    <div style="display:flex;align-items:center;gap:10px">
+      <span style="font-size:12px;color:var(--text-muted);white-space:nowrap">แสดง:</span>
+      <select id="pageSizeSelect" class="page-size-select" onchange="changePageSize(this.value)">
+        <option value="5">5 รายการ</option>
+        <option value="10">10 รายการ</option>
+        <option value="15">15 รายการ</option>
+        <option value="20">20 รายการ</option>
+        <option value="0" selected>ทั้งหมด</option>
+      </select>
+      <span id="tableCount" style="font-size:12px;color:var(--text-dim)"></span>
+    </div>
+  </div>
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th><th>Service Name</th><th>Source Data</th><th>Role</th><th>Total %</th>
+          <th>Jan</th><th>Feb</th><th>Mar</th><th>Apr</th><th>May</th><th>Jun</th>
+          <th>Jul</th><th>Aug</th><th>Sep</th><th>Oct</th><th>Nov</th><th>Dec</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="footer-note" id="footerNote">⏳ กำลังโหลดข้อมูลจาก Google Sheet...</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+const SHEET_ID='1eVflnsnpCk1aQrSX7ZriGDxCbfATHi0GyCiIAOvk4m8';
+const SHEET_NAMES={'2025':'คะแนน BY Role ปี 2025','2026':'คะแนน BY Role ปี 2026'};
+const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+// BY Role sheet: Total=J(idx9), monthly totals row1: M(12),P(15),S(18),V(21),Y(24),AB(27),AE(30),AH(33),AK(36),AN(39),AQ(42),AT(45)
+// Per-row monthly scores same offset pattern starting from col M
+const ROLE_COL=6; // G = index 6 (0-based)
+const TOTAL_COL=9; // J = index 9
+const SERVICE_MONTH_COLS=[12,15,18,21,24,27,30,33,36,39,42,45];
+const CHART_TOTAL_COLS=[12,15,18,21,24,27,30,33,36,39,42,45];
+
+let allData={'2025':[],'2026':[]};
+let activeType='all';
+let trendChart=null;
+let activeKpiFilter=null;
+let activeServiceUid=null;
+let currentTheme='dark';
+let tablePageSize=0;
+
+/* ── TROPHY BADGES ── */
+function makeTrophy(rank){
+  const cfg=[
+    {cup:'#FFF0AA',cup2:'#CC9A00',rim1:'#FFE566',rim2:'#F5C200',base:'#A07800',handle:'#C89000',circle:'#FFF8CC',cs:'#C89000',num:'#7A5200',sp:'#FFE566',sp2:'#FFF8CC',sp3:'#FFD050'},
+    {cup:'#EEF4FF',cup2:'#8898B8',rim1:'#D8E4F4',rim2:'#A0B4CC',base:'#8090A8',handle:'#8898B8',circle:'#F0F4FF',cs:'#8898B8',num:'#2A3A58',sp:'#CCD8EC',sp2:'#EEF4FF',sp3:'#9AADC8'},
+    {cup:'#FFD9A8',cup2:'#AA5500',rim1:'#FFCC88',rim2:'#CC7733',base:'#993300',handle:'#AA5500',circle:'#FFF0DC',cs:'#AA5500',num:'#5C2200',sp:'#FFCC88',sp2:'#FFE8CC',sp3:'#CC7733'},
+    {cup:'#C8E4FF',cup2:'#1155BB',rim1:'#AACCFF',rim2:'#4488DD',base:'#0A44AA',handle:'#2266CC',circle:'#EAF4FF',cs:'#2266CC',num:'#0A2A6A',sp:'#AACCFF',sp2:'#DDEEFF',sp3:'#4488DD'},
+    {cup:'#CCFFDD',cup2:'#0D7A40',rim1:'#99EEBB',rim2:'#22AA66',base:'#085C2A',handle:'#118844',circle:'#EAFFF4',cs:'#118844',num:'#053A18',sp:'#99EEBB',sp2:'#DDFFF0',sp3:'#22AA66'},
+  ];
+  const c=cfg[rank-1];
+  return `<svg width="48" height="58" viewBox="0 0 88 88" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <linearGradient id="trb${rank}" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0%" stop-color="${c.rim1}"/>
+    <stop offset="50%" stop-color="#ffffff" stop-opacity=".55"/>
+    <stop offset="100%" stop-color="${c.rim2}"/>
+  </linearGradient>
+  <linearGradient id="trs${rank}" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="${c.cup}"/>
+    <stop offset="100%" stop-color="${c.cup2}"/>
+  </linearGradient>
+</defs>
+<!-- rim -->
+<rect x="10" y="6" width="68" height="8" rx="4" fill="url(#trb${rank})" stroke="${c.handle}" stroke-width="1.5"/>
+<!-- cup body -->
+<path d="M14 10 Q12 42 22 56 Q30 67 44 69 Q58 67 66 56 Q76 42 74 10 Z" fill="url(#trs${rank})" stroke="${c.handle}" stroke-width="2"/>
+<!-- handles -->
+<path d="M14 22 Q2 22 2 36 Q2 50 14 48" fill="none" stroke="${c.handle}" stroke-width="4.5" stroke-linecap="round"/>
+<path d="M74 22 Q86 22 86 36 Q86 50 74 48" fill="none" stroke="${c.handle}" stroke-width="4.5" stroke-linecap="round"/>
+<!-- shine -->
+<path d="M20 16 Q18 38 24 50 Q28 60 34 62" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" opacity=".28"/>
+<!-- number circle -->
+<circle cx="44" cy="40" r="18" fill="${c.circle}" stroke="${c.cs}" stroke-width="1.5"/>
+<text x="44" y="47" font-size="22" font-weight="900" text-anchor="middle" fill="${c.num}" font-family="Georgia,serif">${rank}</text>
+<!-- stem ชิดกับก้นถ้วย -->
+<rect x="35" y="69" width="18" height="10" rx="2" fill="${c.base}"/>
+<!-- base plate ชิดกับ stem -->
+<rect x="18" y="79" width="52" height="7" rx="3" fill="${c.base}"/>
+<!-- sparkles -->
+<circle class="tsp" cx="6"  cy="4"  r="2.5" fill="${c.sp}"/>
+<circle class="tsp" cx="82" cy="3"  r="2.2" fill="${c.sp}"/>
+<circle class="tsp" cx="44" cy="1"  r="2"   fill="${c.sp2}"/>
+<circle class="tsp" cx="6"  cy="86" r="1.8" fill="${c.sp3}"/>
+<circle class="tsp" cx="82" cy="86" r="1.8" fill="${c.sp3}"/>
+</svg>`;
+}
+const trophyBadges=[1,2,3,4,5].map(makeTrophy);
+
+/* ── THEME ── */
+function toggleTheme(){
+  currentTheme=currentTheme==='dark'?'light':'dark';
+  document.documentElement.setAttribute('data-theme',currentTheme);
+  document.getElementById('themeIcon').textContent=currentTheme==='dark'?'☀️':'🌙';
+  document.getElementById('themeLabel').textContent=currentTheme==='dark'?'Light Mode':'Dark Mode';
+  localStorage.setItem('csat-theme',currentTheme);
+  const{data,month,year}=getBaseData();const rawData=allData[year]||[];
+  if(activeServiceUid){const svc=data.find(s=>s.uid===activeServiceUid);if(svc){renderChartService(svc);return;}}
+  renderChartTotal(activeKpiFilter?getFilteredTableData(data,getActiveMonths(month)):data,month,year,rawData);
+}
+function initTheme(){const saved=localStorage.getItem('csat-theme');if(saved&&saved!==currentTheme)toggleTheme();}
+function getChartGridColor(){return currentTheme==='dark'?'#2a3441':'#e1e4e8'}
+function getChartTickColor(){return currentTheme==='dark'?'#7d8590':'#656d76'}
+function getChartTooltipBg(){return currentTheme==='dark'?'#1c2330':'#ffffff'}
+function getChartTooltipBorder(){return currentTheme==='dark'?'#2a3441':'#d0d7de'}
+function getChartTooltipTitle(){return currentTheme==='dark'?'#e6edf3':'#1f2328'}
+
+/* ── DATA ── */
+function parsePercent(val){
+  if(val===null||val===undefined||val==='')return null;
+  const str=String(val).replace('%','').trim();
+  if(str==='ไม่มีผลประเมิน'||str==='-'||str==='')return null;
+  const n=parseFloat(str);return isNaN(n)?null:n>1?n:n*100;
+}
+
+async function fetchSheet(year){
+  const sheetName=SHEET_NAMES[year];
+  const base=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
+  const parseFn=async(res)=>{const text=await res.text();return JSON.parse(text.substring(text.indexOf('{'),text.lastIndexOf('}')+1));};
+  try{
+    const[resSummary,resData]=await Promise.all([fetch(`${base}&range=A1:AV1`),fetch(`${base}&range=A3:AV200`)]);
+    const[jsonSummary,jsonData]=await Promise.all([parseFn(resSummary),parseFn(resData)]);
+    const sRow=jsonSummary.table.rows[0];
+    const getSVal=(i)=>(sRow&&sRow.c&&sRow.c[i]&&sRow.c[i].v!==undefined)?sRow.c[i].v:null;
+    const masterTotal=parsePercent(getSVal(TOTAL_COL)); // J1
+    const chartMonthlyTotals=CHART_TOTAL_COLS.map(col=>parsePercent(getSVal(col)));
+    const data=[];
+    jsonData.table.rows.forEach((row,rowIndex)=>{
+      if(!row.c)return;
+      const getVal=(i)=>(row.c[i]&&row.c[i].v!==undefined)?row.c[i].v:null;
+      const orderRaw=getVal(0);if(orderRaw===null||isNaN(Number(orderRaw)))return;
+      const order=Number(orderRaw);
+      const name=String(getVal(1)||'').trim();if(!name)return;
+      const uid=`${order}_${rowIndex}`;
+      const source=String(getVal(2)||'').trim();
+      const role=String(getVal(ROLE_COL)||'').trim(); // G col
+      const total=parsePercent(getVal(TOTAL_COL)); // J col
+      const scores={};SERVICE_MONTH_COLS.forEach((colIdx,i)=>{scores[i+1]=parsePercent(getVal(colIdx));});
+      data.push({uid,order,name,source,role,total,scores});
+    });
+    data.sort((a,b)=>a.order-b.order);
+    data.masterTotal=masterTotal;data.chartMonthlyTotals=chartMonthlyTotals;return data;
+  }catch(e){
+    console.error('Fetch error:',e);
+    const empty=[];empty.masterTotal=null;empty.chartMonthlyTotals=new Array(12).fill(null);return empty;
+  }
+}
+
+async function loadAllData(){
+  showLoading(true);
+  const[d2025,d2026]=await Promise.all([fetchSheet('2025'),fetchSheet('2026')]);
+  allData['2025']=d2025;allData['2026']=d2026;showLoading(false);
+  document.getElementById('footerNote').textContent=`✅ ข้อมูลจาก Google Sheet — อัปเดตล่าสุดเมื่อโหลดหน้านี้ | 2025: ${d2025.length} service | 2026: ${d2026.length} service`;
+  applyFilters();
+}
+
+function showLoading(on){
+  if(!on)return;
+  document.getElementById('kpiRow').innerHTML=`<div style="grid-column:1/-1;text-align:center;color:var(--text-muted);padding:20px">⏳ กำลังโหลดข้อมูล...</div>`;
+  document.getElementById('tableBody').innerHTML=`<tr><td colspan="17" style="text-align:center;padding:30px;color:var(--text-muted)">⏳ กำลังโหลดข้อมูล...</td></tr>`;
+  document.getElementById('top5List').innerHTML=`<div style="color:var(--text-muted);text-align:center;padding:20px">⏳ กำลังโหลด...</div>`;
+}
+
+function getScore(s,month){const v=s.scores[month];return(v!==null&&v!==undefined)?v:null;}
+function scoreClass(v){
+  if(v===null||v===undefined)return'score-neutral';
+  const r=Math.round(v*100)/100;
+  if(r>=90)return'score-green';if(r>=80)return'score-yellow';return'score-red';
+}
+function scoreColorVar(v){
+  if(v===null||v===undefined)return currentTheme==='dark'?'#555':'#bbb';
+  const r=Math.round(v*100)/100;
+  if(r>=90)return'#56d97b';if(r>=80)return'#f0c040';return'#e85c4a';
+}
+function getColF(s,months){return months.length===1?getScore(s,months[0]):s.total;}
+function getBaseData(){
+  const year=document.getElementById('filterYear').value;
+  const month=document.getElementById('filterMonth').value;
+  const search=document.getElementById('searchInput').value.toLowerCase();
+  let data=[...(allData[year]||[])];
+  if(activeType!=='all')data=data.filter(s=>s.source.toLowerCase().includes(activeType.toLowerCase()));
+  if(search)data=data.filter(s=>s.name.toLowerCase().includes(search));
+  return{data,month,year};
+}
+function getActiveMonths(month){return month==='all'?[1,2,3,4,5,6,7,8,9,10,11,12]:[parseInt(month)];}
+function getFilteredTableData(data,months){
+  if(activeKpiFilter==='good')return data.filter(s=>{const v=getColF(s,months);return v!==null&&Math.round(v*100)/100>=90;});
+  if(activeKpiFilter==='mid')return data.filter(s=>{const v=getColF(s,months);return v!==null&&Math.round(v*100)/100>=80&&Math.round(v*100)/100<90;});
+  if(activeKpiFilter==='bad')return data.filter(s=>{const v=getColF(s,months);return v!==null&&v<80;});
+  return data;
+}
+
+/* ── RENDER ── */
+function applyFilters(){
+  const{data,month,year}=getBaseData();
+  const months=getActiveMonths(month);const rawData=allData[year]||[];
+  const good=data.filter(s=>{const v=getColF(s,months);return v!==null&&Math.round(v*100)/100>=90;});
+  const mid=data.filter(s=>{const v=getColF(s,months);return v!==null&&Math.round(v*100)/100>=80&&Math.round(v*100)/100<90;});
+  const bad=data.filter(s=>{const v=getColF(s,months);return v!==null&&v<80;});
+  renderKPI(rawData,good.length+mid.length+bad.length,good.length,mid.length,bad.length);
+  const tableData=getFilteredTableData(data,months);
+  renderTop5(data,months);renderTable(tableData,months);updateBanner(data);
+  if(activeServiceUid){const svc=data.find(s=>s.uid===activeServiceUid);if(svc){renderChartService(svc);return;}else activeServiceUid=null;}
+  renderChartTotal(tableData,month,year,rawData);
+}
+
+function renderKPI(rawData,count,good,mid,bad){
+  const{data,month,year}=getBaseData();
+  const months=getActiveMonths(month);
+  let totalVal;
+  const isFiltered=activeType!=='all'||document.getElementById('searchInput').value!=='';
+
+  if(activeServiceUid){
+    // เลือก 1 service → แสดงคะแนน avg ของ service นั้น
+    const svc=(allData[year]||[]).find(s=>s.uid===activeServiceUid);
+    if(svc){
+      const vals=months.map(m=>getScore(svc,m)).filter(v=>v!==null);
+      totalVal=vals.length?parseFloat((vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(2)):0;
+    } else { totalVal=0; }
+  } else if(activeKpiFilter){
+    // เลือก kpi filter → คำนวณ avg เฉพาะกลุ่มนั้น
+    const filtered=getFilteredTableData(data,months);
+    const vals=filtered.map(s=>getColF(s,months)).filter(v=>v!==null);
+    totalVal=vals.length?parseFloat((vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(2)):0;
+  } else if(isFiltered){
+    // เลือก source data / search → คำนวณ avg จาก filtered data
+    const vals=data.map(s=>getColF(s,months)).filter(v=>v!==null);
+    totalVal=vals.length?parseFloat((vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(2)):0;
+  } else {
+    // ไม่ได้เลือกอะไร → masterTotal เหมือนเดิม
+    totalVal=rawData.masterTotal!==null?rawData.masterTotal:0;
+  }
+  const totalClass=totalVal>=90?'green':totalVal>=80?'yellow':'red';
+  const totalTextClass=totalVal>=90?'text-green':totalVal>=80?'text-yellow':'text-red';
+  document.getElementById('kpiRow').innerHTML=`
+    <div class="kpi-card ${totalClass}">
+      <div class="kpi-label">คะแนนรวม Total<br>ทุก Service</div>
+      <div class="kpi-value ${totalTextClass}">${totalVal.toFixed(2)}%</div>
+      <div class="kpi-sub">ภาพรวมทุก service</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">จำนวน Service<br>ทั้งหมด</div>
+      <div class="kpi-value">${count}</div>
+      <div class="kpi-sub">service</div>
+    </div>
+    <div class="kpi-card green clickable ${activeKpiFilter==='good'?'kpi-active':''}" onclick="toggleKpiFilter('good')">
+      <div class="kpi-label">จำนวน Service<br>ที่ได้คะแนนดี</div>
+      <div class="kpi-value text-green">${good}</div>
+      <div class="kpi-sub">≥ 90.00%</div>
+      <div class="kpi-hint">คลิกเพื่อดู service</div>
+    </div>
+    <div class="kpi-card yellow clickable ${activeKpiFilter==='mid'?'kpi-active':''}" onclick="toggleKpiFilter('mid')">
+      <div class="kpi-label">จำนวน Service<br>ที่ได้คะแนนปานกลาง</div>
+      <div class="kpi-value text-yellow">${mid}</div>
+      <div class="kpi-sub">80.00–89.99%</div>
+      <div class="kpi-hint">คลิกเพื่อดู service</div>
+    </div>
+    <div class="kpi-card red clickable ${activeKpiFilter==='bad'?'kpi-active':''}" onclick="toggleKpiFilter('bad')">
+      <div class="kpi-label">จำนวน Service<br>ที่ได้คะแนนต่ำ</div>
+      <div class="kpi-value text-red">${bad}</div>
+      <div class="kpi-sub">≤ 79.99%</div>
+      <div class="kpi-hint">คลิกเพื่อดู service</div>
+    </div>`;
+}
+function toggleKpiFilter(type){activeServiceUid=null;activeKpiFilter=activeKpiFilter===type?null:type;applyFilters();}
+
+function updateBanner(data){
+  const banner=document.getElementById('filterBanner');
+  const bannerText=document.getElementById('filterBannerText');
+  if(activeServiceUid){const svc=data.find(s=>s.uid===activeServiceUid);if(svc){banner.classList.add('show');bannerText.textContent=`📌 กำลังดูกราฟของ: ${svc.name}`;return;}}
+  if(activeKpiFilter){
+    const labels={good:'คะแนนดี (≥ 90%)',mid:'คะแนนปานกลาง (80–89.99%)',bad:'คะแนนต่ำ (≤ 79.99%)'};
+    banner.classList.add('show');bannerText.textContent=`🔍 กรอง: Service ที่ได้${labels[activeKpiFilter]}`;return;
+  }
+  banner.classList.remove('show');
+}
+function clearAllActiveFilters(){activeKpiFilter=null;activeServiceUid=null;applyFilters();}
+
+function renderTop5(data,months){
+  const ranked=data.map(s=>({...s,avg:getColF(s,months)||0})).filter(s=>s.avg>0).sort((a,b)=>b.avg-a.avg).slice(0,5);
+  document.getElementById('top5List').innerHTML=ranked.map((s,i)=>`
+    <div class="top5-item">
+      <div class="top5-badge">${trophyBadges[i]}</div>
+      <div class="top5-info">
+        <div class="top5-name">${s.name} <span style="font-size:10px;color:var(--text-dim)">#${s.order}</span></div>
+        <div class="top5-company">${s.source}</div>
+        <div class="top5-bar"><div class="top5-bar-fill" style="width:${s.avg}%"></div></div>
+      </div>
+      <div class="top5-score">${s.avg.toFixed(2)}%</div>
+    </div>`).join('')||`<div style="color:var(--text-muted);text-align:center;padding:20px">ไม่มีข้อมูล</div>`;
+}
+
+function renderTable(data,months){
+  const titleLabels={good:'📋 Service ที่ได้คะแนนดี (≥ 90%)',mid:'📋 Service ที่ได้คะแนนปานกลาง (80–89.99%)',bad:'📋 Service ที่ได้คะแนนต่ำ (≤ 79.99%)'};
+  document.getElementById('tableTitle').textContent=activeKpiFilter?titleLabels[activeKpiFilter]:'📋 รายการ Service ทั้งหมด';
+  const displayData=tablePageSize>0?data.slice(0,tablePageSize):data;
+  document.getElementById('tableCount').textContent=tablePageSize>0&&displayData.length<data.length?`แสดง ${displayData.length} / ${data.length} รายการ`:`${data.length} รายการ`;
+  const rows=displayData.map(s=>{
+    const totalVal=s.total;
+    const monthCells=[1,2,3,4,5,6,7,8,9,10,11,12].map(m=>{
+      const v=getScore(s,m);
+      return v===null?`<td><span class="score-cell score-neutral">ไม่มีผลประเมิน</span></td>`:`<td><span class="score-cell ${scoreClass(v)}">${v.toFixed(2)}%</span></td>`;
+    }).join('');
+    const srcClass=s.source.includes('พัฒนา')?'dev':s.source.toLowerCase().includes('google')?'gform':'csat';
+    const isSelected=s.uid===activeServiceUid;
+    return`<tr class="${isSelected?'row-selected':''}" data-uid="${s.uid}">
+      <td style="text-align:center;color:var(--text-muted);font-family:'IBM Plex Mono',monospace;font-size:11px">${s.order}</td>
+      <td style="font-weight:500">${s.name}${isSelected?' <span style="font-size:10px;color:var(--accent)">◀ กำลังดูกราฟ</span>':''}</td>
+      <td><span class="source-badge ${srcClass}">${s.source}</span></td>
+      <td style="color:var(--text-muted);font-size:12px">${s.role||'—'}</td>
+      <td><span class="score-cell ${scoreClass(totalVal)}">${totalVal!==null?totalVal.toFixed(2)+'%':'—'}</span></td>
+      ${monthCells}</tr>`;
+  }).join('');
+  document.getElementById('tableBody').innerHTML=rows||`<tr><td colspan="17" style="text-align:center;padding:20px;color:var(--text-muted)">ไม่พบข้อมูล</td></tr>`;
+  document.getElementById('tableBody').querySelectorAll('tr[data-uid]').forEach(tr=>{tr.addEventListener('click',()=>selectService(tr.dataset.uid));});
+}
+
+function changePageSize(val){tablePageSize=parseInt(val);applyFilters();}
+
+function selectService(uid){activeServiceUid=activeServiceUid===uid?null:uid;if(activeServiceUid)activeKpiFilter=null;applyFilters();}
+
+function renderChartTotal(data,selectedMonth,year,rawData){
+  document.getElementById('chartTitle').textContent='📈 คะแนน TOTAL รายเดือน';
+  document.getElementById('chartTitle').classList.remove('highlight');
+  const isFiltered=activeType!=='all'||document.getElementById('searchInput').value!==''||activeKpiFilter;
+  let points;
+  if(isFiltered){
+    points=[1,2,3,4,5,6,7,8,9,10,11,12].map(m=>{
+      const vals=data.map(s=>getScore(s,m)).filter(v=>v!==null);
+      return vals.length?parseFloat((vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(2)):null;
+    });
+  }else{points=rawData.chartMonthlyTotals||new Array(12).fill(null);}
+  drawChart(points,'#58a6ff','คะแนน Total %');
+}
+
+function renderChartService(svc){
+  document.getElementById('chartTitle').textContent=`📈 คะแนนรายเดือน Service : ${svc.name}`;
+  document.getElementById('chartTitle').classList.add('highlight');
+  drawChart([1,2,3,4,5,6,7,8,9,10,11,12].map(m=>getScore(svc,m)),'#f0c040',svc.name);
+}
+
+function drawChart(points,lineColor,label){
+  if(trendChart)trendChart.destroy();
+  const ctx=document.getElementById('trendChart').getContext('2d');
+  trendChart=new Chart(ctx,{
+    type:'line',
+    data:{labels:MONTHS,datasets:[{label,data:points,borderColor:lineColor,borderWidth:2,
+      pointBackgroundColor:points.map(v=>scoreColorVar(v)),pointBorderColor:points.map(v=>scoreColorVar(v)),
+      pointRadius:6,pointHoverRadius:8,fill:true,
+      backgroundColor:(ctx)=>{const{chartArea}=ctx.chart;if(!chartArea)return'transparent';
+        const g=ctx.chart.ctx.createLinearGradient(0,chartArea.top,0,chartArea.bottom);
+        g.addColorStop(0,lineColor+'26');g.addColorStop(1,lineColor+'00');return g;},
+      tension:.3,spanGaps:true}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{backgroundColor:getChartTooltipBg(),borderColor:getChartTooltipBorder(),borderWidth:1,
+        titleColor:getChartTooltipTitle(),bodyColor:getChartTickColor(),
+        callbacks:{label:ctx=>ctx.parsed.y!==null?` ${ctx.parsed.y.toFixed(2)}%`:' ไม่มีข้อมูล',
+          labelColor:ctx=>({backgroundColor:scoreColorVar(ctx.parsed.y),borderColor:'transparent'})}}},
+      scales:{x:{grid:{color:getChartGridColor()},ticks:{color:getChartTickColor(),font:{size:11}}},
+        y:{min:60,max:100,grid:{color:getChartGridColor()},ticks:{color:getChartTickColor(),font:{size:12},stepSize:5,callback:v=>v+'%'},border:{display:false}}}}
+  });
+}
+
+function selectTag(el){document.querySelectorAll('.tag').forEach(t=>t.classList.remove('active'));el.classList.add('active');activeType=el.dataset.type;applyFilters();}
+
+initTheme();
+loadAllData();
+</script>
+</body>
+</html>
